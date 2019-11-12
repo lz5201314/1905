@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<form id="edit-tree-form">
+    <input type="hidden" th:value="${dai.id }" name="id">
+    名称：<input type="text" name="text" th:value="${dai.text}"><br>
+    路径：<input type="text" name="url" th:value="${dai.url}"><br>
+    样式:<input type="text" name="iconcls" th:value="${dai.iconcls}"><br>
+    上级权限:<input id="dd" name="pid" class="easyui-combotree" th:value="${dai.pid}">
+
+</form>
+<script>
+
+    $('#dd').combotree({
+        url: '../queryTree',
+        checkbox: true
+    });
+
+</script>
+</body>
+</html>
+</body>
+</html>

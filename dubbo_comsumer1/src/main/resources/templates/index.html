@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+
+    <!-- 引入JQuery -->
+
+    <link rel="stylesheet"
+          href="../EasyUI(1)/themes/gray/easyui.css" type="text/css"/>
+
+    <!-- 引入EasyUI的图标样式文件-->
+    <link rel="stylesheet"
+          href="../EasyUI(1)/themes/icon.css" type="text/css"/>
+</head>
+<body>
+
+<script type="text/javascript"
+        src="../EasyUI(1)/jquery.min.js"></script>
+<!-- 引入EasyUI -->
+<script type="text/javascript"
+        src="../EasyUI(1)/jquery.easyui.min.js"></script>
+
+<!-- 引入EasyUI的中文国际化js，让EasyUI支持中文 -->
+<script type="text/javascript"
+        src="../EasyUI(1)/locale/easyui-lang-zh_CN.js"></script>
+
+
+<script src="../EasyUI(1)/highcharts/code/highcharts.js"></script>
+<script src="../EasyUI(1)/highcharts/code/modules/exporting.js"></script>
+<script src="../EasyUI(1)/highcharts/code/modules/export-data.js"></script>
+
+
+
+<div id="container" style="min-width: 310px; height: 400px; max-width: 600px; margin: 0 auto"></div>
+
+<form id="importId" action="../importExcel" method="post" enctype="multipart/form-data">
+    <input type="file" name="file"><br>
+    <input type="submit" value="上传">
+
+</form>
+
+
+
+<a    class="easyui-linkbutton" onclick="Export()">导出</a>
+<a id="di-add" class="easyui-linkbutton" data-options="iconCls:'icon-add'">添加</a>
+<a id="di-rem" class="easyui-linkbutton" data-options="iconCls:'icon-remove'">批删</a>
+<table id="tree-table"></table>
+<div id="tree-div"></div>
+
+
+<script type="text/javascript">
+
+
+    $(function () {
+
+        $("#btn").linkbutton({
+            onClick: function () {
+                search();
+            }
+        })
+    })
+
+
+
+
+    $(function () {
+        $.ajax({
+            url:"../queryVeiw",
+            type:"post",
+            dataType:"json",
+            success:function (data) {
+                Highcharts.chart('container', {
+                    chart: {
+                        plotBackgroundColor: null,
+                        plotBorderWidth: null,
+                        plotShadow: false,
+                        type: 'pie'
+                    },
+                    title: {
+                        text: '权限信息'
+                    },
+                    tooltip: {
+                        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+                    },
+                    plotOptions: {
+                        pie: {
+                            allowPointSelect: true,
+                            cursor: 'pointer',
+                            dataLabels: {
+                                enabled: true,
+                                format: '<b>{point.y}</b> 条'
+                            }
+                        }
+                    },
+                    series: [{
+                        name: 'Brands',
+                        colorByPoint: true,
+                        data: data
+                    }]
+                });
+            },error:function () {
+                alert("查询失败")
+            }
+        })
+    })
+
+
+
+
+
+
+
+
+
+
+
+
+    function search() {
+
+        $('#tree-table').datagrid({
+            url: '../queryquanA',
+ //           pagination: true,
+
+            pageNumber: 1,
+            pageSize: 10,
+            pageList: [2, 5, 8, 10],
+
+            singleSelect: true,
+            checkOnSelect: false,
+            selectOnCheck: false,
+            columns: [
+                [
+                    {field:'xxx',title:'',checkbox:true,width:$(this).width()*0.05},
+                    {field: 'id', title: 'id', width: 100},
+                    {field: 'text', title: '名字', width: 100},
+                    {field: 'url', title: '路径', width: 100},
+                    {field: 'iconcls', title: '样式', width: 100},
+                    {field: 'textname', title: '上级权限名', width: 100},
+                    {
+                        field: 'act', title: '操作', width: 100,
+                        formatter: function (val, row, index) {
+                            return "<input type='button' onclick='edit(" + row.id + ")' value='修改'>"
+
+                        }
+
+                    }
+
+                ]
+            ]
+        });
+    }
+
+    $("#di-add").linkbutton({
+        onClick: function () {
+            $('#tree-div').dialog({
+                title: '添加信息',
+                width: 400,
+                height: 300,
+                href: '../toAddtree',
+                modal: false,
+                buttons: [{
+                    text: '保存',
+                    handler: function () {
+                        $('#add-tree-form').form('submit', {
+                            url: "../addtree",
+                            onSubmit: function () {
+
+                            },
+                            success: function (data) {
+
+
+                                $("#tree-table").datagrid("load")
+                                $('#tree-div').dialog('close');
+
+                            }
+                        });
+
+                    }
+                }, {
+                    text: '关闭',
+                    handler: function () {
+                        $('#tree-div').dialog('close')
+                    }
+                }]
+            });
+        }
+    })
+
+
+    function edit(id) {
+//
+        $('#tree-div').dialog({
+            title: '修改商品信息',
+            width: 400,
+            height: 300,
+            href: '../totree?id=' + id,
+            modal: false,
+            buttons: [{
+                text: '保存',
+                handler: function () {
+
+                    $('#edit-tree-form').form('submit', {
+                        url: "../updatetree",
+                        onSubmit: function () {
+
+                        },
+                        success: function (data) {
+
+                            $("#tree-table").datagrid("load")
+                            $('#tree-div').dialog('close');
+//
+                        }
+                    });
+
+                }
+            }, {
+                text: '关闭',
+                handler: function () {
+                    $('#tree-div').dialog('close')
+                }
+            }]
+        });
+    }
+
+    $("#di-rem").linkbutton({
+        onClick: function () {
+//			1.获取被选中的复选框的id——————getChecked
+            var ids = "";
+            var trArr = $("#tree-table").datagrid('getChecked')
+            for (var i = 0; i < trArr.length; i++) {
+                ids += "," + trArr[i].id
+
+            }
+
+            ids = ids.substring(1);
+            alert(ids)
+//			2.调用后台代码删除
+            $.ajax({
+                type: "post",
+                url: "../removeAlltree",
+                data: {ids: ids},
+                success: function (msg) {
+                    if (msg > 0) {
+//						提示
+                        $.messager.show({
+                            title: '消息提示',
+                            msg: '已成功删除' + msg + '条信息',
+                            timeout: 2000,
+                            showType: 'slide'
+                        });
+
+//						刷新列表
+                        $("#tree-table").datagrid('load')
+                    }
+                }
+            })
+        }
+    })
+
+
+    Export = function(){
+
+        var id = ""
+
+        var arr = $('#tree-table').datagrid("getChecked")
+
+        for (var i = 0; i < arr.length; i++) {
+            id+= "," + arr[i].id;
+        }
+
+        id = id.substring(1);
+alert(id);
+        location.href = "../export?id="+id;
+
+
+
+
+
+
+
+    }
+
+
+
+
+    $(function () {
+        search();
+    })
+</script>
+</body>
+</html>
